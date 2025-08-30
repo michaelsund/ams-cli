@@ -1,0 +1,14 @@
+[package]
+name = "ams"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+serde_json = "1.0.143"
+tokio = { version = "1", features = ["full"] }
+serde = "1.0.219"
+prettytable-rs = "^0.10"
+chrono = "0.4"
+open = "5.3.2"
+clap = "4.5.46"
