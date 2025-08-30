@@ -20,8 +20,9 @@ async fn main() {
 
     let num_adverts = matches.get_one::<String>("numadverts").unwrap();
 
-    // Call
+    // Call amslib to retrieve and print the table
     let data: AmsData = amslib::run(&num_adverts).await;
+    println!("To open a advert url, input the id and press Enter.");
     loop {
         print!("> ");
         std::io::stdout().flush().unwrap();
