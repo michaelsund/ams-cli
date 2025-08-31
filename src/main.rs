@@ -9,6 +9,9 @@ extern crate prettytable;
 
 #[tokio::main]
 async fn main() {
+    // Start by clearing the screen
+    clearscreen::clear().expect("Failed to clear the screen...");
+    // Read the arguments provided
     let matches = Command::new("ams")
         .version("1.0")
         .about("Fetches and displays IT jobadverts from arbetsformedlingen.se in Örebro")
