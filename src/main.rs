@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local};
 use clap::{Command, arg};
 use std::io::Write;
 use tokio::io::Error;
@@ -19,9 +20,10 @@ async fn main() {
         .get_matches();
 
     let num_adverts = matches.get_one::<String>("numadverts").unwrap();
+    let today = Local::now();
 
     // Call amslib to retrieve and print the table
-    let data: AmsData = amslib::run(&num_adverts).await;
+    let data: AmsData = amslib::run(&num_adverts, &today).await;
     println!("To open a advert url, input the id and press Enter.");
     loop {
         print!("> ");

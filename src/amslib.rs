@@ -1,3 +1,4 @@
+use chrono::Local;
 use chrono::{DateTime, Utc};
 use prettytable::Table;
 use reqwest::Client;
@@ -21,8 +22,8 @@ pub struct AmsData {
     pub ads: Vec<AmsDataItem>,
 }
 
-pub(crate) async fn run(num_adverts: &String) -> AmsData {
-    let json_res = post_data(&num_adverts).await;
+pub(crate) async fn run(num_adverts: &String, to_date: &DateTime<Local>) -> AmsData {
+    let json_res = post_data(&num_adverts, &to_date).await;
     let ads: AmsData = serde_json::from_str(&json_res.unwrap()).unwrap();
     display_pretty_table(&ads);
     ads
@@ -54,7 +55,7 @@ fn parse_date(date: String) -> DateTime<Utc> {
     date.parse().expect("Failed to parse datetime")
 }
 
-async fn post_data(num_adverts: &String) -> Result<String, Error> {
+async fn post_data(num_adverts: &String, to_date: &DateTime<Local>) -> Result<String, Error> {
     let client = Client::new();
     let res = client
         .post("https://platsbanken-api.arbetsformedlingen.se/jobs/v1/search")
@@ -67,7 +68,7 @@ async fn post_data(num_adverts: &String) -> Result<String, Error> {
             "order": "relevance",
             "maxRecords": &num_adverts,
             "startIndex": 0,
-            "toDate": "2025-08-29T16:53:30.326Z",
+            "toDate": &to_date.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
             "source": "pb"
         }))
         .send()
