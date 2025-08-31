@@ -15,14 +15,10 @@ async fn main() {
     let matches = Command::new("ams")
         .version("1.0")
         .about("Fetches and displays IT jobadverts from arbetsformedlingen.se in Örebro")
-        .arg(
-            arg!(--numadverts <VALUE>)
-                .required(false)
-                .default_value("15"),
-        )
+        .arg(arg!(-n --num <VALUE>).required(false).default_value("15"))
         .get_matches();
 
-    let num_adverts = matches.get_one::<String>("numadverts").unwrap();
+    let num_adverts = matches.get_one::<String>("num").unwrap();
     let today = Local::now();
 
     // Call amslib to retrieve and print the table
