@@ -32,35 +32,40 @@ async fn main() {
 
     // Call amslib to retrieve and print the table
     let today = Local::now();
-    let data: AmsData = amslib::run(&num_adverts, &today)
-        .await
-        .expect("Failed to call amslib");
-    println!("To open a advert url, input the 'id' and press Enter, or 'q' to quit.");
-    loop {
-        print!("> ");
-        std::io::stdout().flush().unwrap();
-        let inp = read_input().expect("Problem reading input");
-        // Check if input is a parsable number
-        if inp.trim().parse::<usize>().is_ok() {
-            let selected_index: usize = inp
-                .trim()
-                .parse()
-                .expect("Failed to parse selected index-string to usize");
-            // TODO: this could be handled the Rust way with match?
-            if selected_index <= data.ads.len() + 1 && selected_index != 0 {
-                // Open the link
-                let combined_url = "https://arbetsformedlingen.se/platsbanken/annonser/".to_owned()
-                    + &data.ads[selected_index - 1].id;
-                // TODO: Check result here if the browser could not be opened.
-                open_browser_link(combined_url).expect("Problem opening browser!");
+    let data: Result<AmsData, reqwest::Error> = amslib::run(&num_adverts, &today).await;
+    if data.is_err() {
+        println!("Problem connecting to the site.. cannot continue.");
+    } else {
+        // Shadow data here but unwrapped to access the Ok(data)
+        let data = data.unwrap();
+        println!("To open a advert url, input the 'id' and press Enter, or 'q' to quit.");
+        loop {
+            print!("> ");
+            std::io::stdout().flush().unwrap();
+            let inp = read_input().expect("Problem reading input");
+            // Check if input is a parsable number
+            if inp.trim().parse::<usize>().is_ok() {
+                let selected_index: usize = inp
+                    .trim()
+                    .parse()
+                    .expect("Failed to parse selected index-string to usize");
+                // TODO: this could be handled the Rust way with match?
+                if selected_index <= data.ads.len() + 1 && selected_index != 0 {
+                    // Open the link
+                    let combined_url = "https://arbetsformedlingen.se/platsbanken/annonser/"
+                        .to_owned()
+                        + &data.ads[selected_index - 1].id;
+                    // TODO: Check result here if the browser could not be opened.
+                    open_browser_link(combined_url).expect("Problem opening browser!");
+                } else {
+                    println!("No ad matches that id.")
+                }
+            // Otherwise check if it is the quit sequence
+            } else if inp.trim() == "q" || inp.trim() == "quit" {
+                std::process::exit(1);
             } else {
-                println!("No ad matches that id.")
+                println!("Type 'q' or 'quit' to exit.");
             }
-        // Otherwise check if it is the quit sequence
-        } else if inp.trim() == "q" || inp.trim() == "quit" {
-            std::process::exit(1);
-        } else {
-            println!("Type 'q' or 'quit' to exit.");
         }
     }
 }
