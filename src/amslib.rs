@@ -68,7 +68,7 @@ fn parse_date(date: String) -> DateTime<Local> {
 async fn post_data(num_adverts: &String, to_date: &DateTime<Local>) -> Result<String, Error> {
     let client = Client::new();
     let res = client
-        .post("https://platsbanken-api.arbetsformedlingen.se/jobs/v1/search2")
+        .post("https://platsbanken-api.arbetsformedlingen.se/jobs/v1/search")
         .json(&json!({
             "filters": [
                 { "type": "occupationField", "value": "apaJ_2ja_LuF" },
