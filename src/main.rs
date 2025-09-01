@@ -9,20 +9,32 @@ extern crate prettytable;
 
 #[tokio::main]
 async fn main() {
-    // Start by clearing the screen
-    clearscreen::clear().expect("Failed to clear the screen...");
     // Read the arguments provided
     let matches = Command::new("ams")
         .version("1.0")
         .about("Fetches and displays IT jobadverts from arbetsformedlingen.se in Örebro")
         .arg(arg!(-n --num <VALUE>).required(false).default_value("15"))
+        .arg(
+            arg!(-c --clear <VALUE>)
+                .required(false)
+                .default_value("false")
+                .default_missing_value("false"),
+        )
         .get_matches();
 
     let num_adverts = matches.get_one::<String>("num").unwrap();
-    let today = Local::now();
+    let should_clear_screen = matches.get_one::<String>("clear").unwrap();
+
+    match should_clear_screen.parse::<bool>().unwrap() {
+        false => (),
+        true => clearscreen::clear().expect("Failed to clear the screen..."),
+    }
 
     // Call amslib to retrieve and print the table
-    let data: AmsData = amslib::run(&num_adverts, &today).await;
+    let today = Local::now();
+    let data: AmsData = amslib::run(&num_adverts, &today)
+        .await
+        .expect("Failed to call amslib");
     println!("To open a advert url, input the 'id' and press Enter, or 'q' to quit.");
     loop {
         print!("> ");

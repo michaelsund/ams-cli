@@ -1,5 +1,0 @@
-- [ ] Add the "positions" field to the AmsData struct and table, to indicate how many positions the ad contains.
-- [ ] When the data has been fetched, and while populating the struct, check if the created date is within the last 3 days, appent a colored star to the ad or make the text a different color to indicate that the ad is relativly new.
-- [ ] Add Error handling to present a better formatted error message, for ex on network request fail in the post_data function (amslib.rs) but also other errors that can occur.
-- [ ] On line 34 in main.rs we should be able to do the compare the rust way with 'match' instead of if/else.
-- [x] Input should handle q or quit to exti the program.

@@ -1,5 +1,7 @@
+use chrono::DateTime;
 use chrono::Local;
-use chrono::{DateTime, Utc};
+use prettytable::Cell;
+use prettytable::Row;
 use prettytable::Table;
 use reqwest::Client;
 use reqwest::Error;
@@ -22,11 +24,11 @@ pub struct AmsData {
     pub ads: Vec<AmsDataItem>,
 }
 
-pub(crate) async fn run(num_adverts: &String, to_date: &DateTime<Local>) -> AmsData {
-    let json_res = post_data(&num_adverts, &to_date).await;
-    let ads: AmsData = serde_json::from_str(&json_res.unwrap()).unwrap();
+pub(crate) async fn run(num_adverts: &String, to_date: &DateTime<Local>) -> Result<AmsData, Error> {
+    let json_res = post_data(&num_adverts, &to_date).await?;
+    let ads = serde_json::from_str(&json_res).expect("Failed to parse json string");
     display_pretty_table(&ads);
-    ads
+    Ok(ads)
 }
 
 fn display_pretty_table(data: &AmsData) {
@@ -39,19 +41,27 @@ fn display_pretty_table(data: &AmsData) {
         let place = &ad.workplace;
         let company = &ad.workplace_name;
         let title = &ad.title;
-        table.add_row(row![
-            FY -> &id.to_string(),
-            &date.format("%d/%m"),
-            &place,
-            &company,
-            &title
-        ]);
+        // Check if we should indicate that the ad is within the last 3 days.
+        let now = Local::now();
+        let days_ago = now.signed_duration_since(date);
+
+        table.add_row(Row::new(vec![
+            Cell::new(&id.to_string()).style_spec("FY"),
+            Cell::new(&date.format("%d/%m").to_string()),
+            Cell::new(&place),
+            Cell::new(&company),
+            // Use the days_ago and the days_new in # of days to mark ads
+            match days_ago.num_days() {
+                0..3 => Cell::new(&title).style_spec("FG"),
+                _ => Cell::new(&title),
+            },
+        ]));
     }
 
     table.printstd();
 }
 
-fn parse_date(date: String) -> DateTime<Utc> {
+fn parse_date(date: String) -> DateTime<Local> {
     date.parse().expect("Failed to parse datetime")
 }
 
@@ -73,7 +83,9 @@ async fn post_data(num_adverts: &String, to_date: &DateTime<Local>) -> Result<St
         }))
         .send()
         .await?;
-    let json = res.text().await.unwrap();
+    // Shadow res and check status before processing
+    let res = res.error_for_status()?;
+    let json = res.text().await?;
 
     Ok(json)
 }
