@@ -27,11 +27,12 @@ pub struct AmsData {
 pub(crate) async fn run(num_adverts: &String, to_date: &DateTime<Local>) -> Result<AmsData, Error> {
     let json_res = post_data(&num_adverts, &to_date).await?;
     let ads = serde_json::from_str(&json_res).expect("Failed to parse json string");
-    display_pretty_table(&ads);
+    display_pretty_table(&ads, &to_date);
     Ok(ads)
 }
 
-fn display_pretty_table(data: &AmsData) {
+fn display_pretty_table(data: &AmsData, today: &DateTime<Local>) {
+    println!("Last run at: {}", today.format("%d/%m %H:%M:%S"));
     let mut table = Table::new();
 
     table.add_row(row![FY => "Id", "Date", "Place", "Company", "Title"]);
