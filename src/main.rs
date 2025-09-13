@@ -38,6 +38,7 @@ async fn main() {
         print!("> ");
         std::io::stdout().flush().unwrap();
         let inp = read_input().expect("Problem reading input");
+        let inp = inp.to_lowercase();
         // Check if input is a parsable number
         if inp.trim().parse::<usize>().is_ok() {
             let selected_index: usize = inp
