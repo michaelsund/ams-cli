@@ -40,7 +40,8 @@ fn display_pretty_table(data: &AmsData, today: &DateTime<Local>) {
         let id = i + 1;
         let date = parse_date(ad.published_date.clone());
         let place = &ad.workplace;
-        let company = &ad.workplace_name;
+        // let company = &ad.workplace_name;
+        let company = &ad.workplace_name.chars().take(50).collect::<String>();
         let title = &ad.title;
         // Check if we should indicate that the ad is within the last 3 days.
         let now = Local::now();
