@@ -1,5 +1,6 @@
 use chrono::DateTime;
 use chrono::Local;
+use colored::Colorize;
 use prettytable::Cell;
 use prettytable::Row;
 use prettytable::Table;
@@ -7,6 +8,9 @@ use reqwest::Client;
 use reqwest::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use terminal_size::Height;
+use terminal_size::Width;
+use terminal_size::terminal_size;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -27,8 +31,53 @@ pub struct AmsData {
 pub(crate) async fn run(num_adverts: &String, to_date: &DateTime<Local>) -> Result<AmsData, Error> {
     let json_res = post_data(&num_adverts, &to_date).await?;
     let ads = serde_json::from_str(&json_res).expect("Failed to parse json string");
-    display_pretty_table(&ads, &to_date);
+    // Check if the terminal width is enough, otherwise just print a list instead of a table.
+    let size = terminal_size();
+    if let Some((Width(w), Height(h))) = size {
+        if w >= 100 {
+            display_pretty_table(&ads, &to_date);
+        } else {
+            display_minimal_list(&ads, &to_date, usize::from(w));
+        }
+    } else {
+        println!("Unable to get terminal size");
+    }
+
     Ok(ads)
+}
+
+fn display_minimal_list(data: &AmsData, today: &DateTime<Local>, max_text_length: usize) {
+    println!("Last run at: {}", today.format("%d/%m %H:%M:%S"));
+    for (i, ad) in data.ads.iter().enumerate() {
+        let id = i + 1;
+        let title = format!("{:.width$}", &ad.title, width = max_text_length - 4);
+        let now = Local::now();
+        let date = parse_date(ad.published_date.clone());
+        let place = &ad.workplace;
+        let company = &ad.workplace_name.chars().take(20).collect::<String>();
+        let row_two_spaces = if i >= 9 { "   " } else { "  " };
+        // Check if we should indicate that the ad is within the last 3 days.
+        let days_ago = now.signed_duration_since(date);
+        match days_ago.num_days() {
+            0..3 => println!(
+                "{} {}\n{}{} {}",
+                &id,
+                &title.green(),
+                row_two_spaces,
+                &company.dimmed(),
+                &place.dimmed(),
+            ),
+            _ => println!(
+                "{} {}\n{}{} {}",
+                &id,
+                &title,
+                row_two_spaces,
+                &company.dimmed(),
+                &place.dimmed(),
+            ),
+        };
+    }
+    println!();
 }
 
 fn display_pretty_table(data: &AmsData, today: &DateTime<Local>) {
